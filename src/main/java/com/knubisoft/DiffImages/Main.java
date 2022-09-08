@@ -3,17 +3,18 @@ package com.knubisoft.DiffImages;
 import lombok.SneakyThrows;
 
 import javax.imageio.ImageIO;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
     @SneakyThrows
     public static void main(String[] args) {
-        File file = new File("D:\\Projects\\java-education\\src\\main\\resources\\1.png");
-        File file2 = new File("D:\\Projects\\java-education\\src\\main\\resources\\2.png");
+        File file = new File("D:\\Projects\\DifferenceImages\\src\\main\\resources\\t2.png");
+        File file2 = new File("D:\\Projects\\DifferenceImages\\src\\main\\resources\\t1.png");
 
         readColors(file, file2);
     }
@@ -28,7 +29,7 @@ public class Main {
         }
 
         Group group = new Group();
-        BufferedImage result = new BufferedImage(img2.getWidth(), img2.getHeight(), img2.getType());
+        List<Point> pointList = new ArrayList<>();
 
         for (int y = 0; y < img.getHeight(); y++) {
             for (int x = 0; x < img.getWidth(); x++) {
@@ -38,36 +39,35 @@ public class Main {
                 Color color = new Color(pixel, true);
                 Color color2 = new Color(pixel2, true);
 
-                //buildImage(color, color2, result, x, y, group);
-                addGroup(group, x, y, color, color2);
+                buildImage(color, color2, img2, x, y, group, pointList);
 
             }
         }
 
-        for (Point point1 : group.getPoints()) {
-            System.out.println(point1.getX() + ";" + point1.getY());
-        }
-
-        //writeImage(result);
+        drawRectangle(pointList, img2);
+        writeImage(img2);
     }
 
-    //TODO: Если пиксели находятся рядом (в радиусе 50 пикселей) или
-    // занимают большую площадь, то прямоугольник должен подсвечивать всю площадь которая отличается.
-    private static void buildImage(Color color, Color color2, BufferedImage result, int x, int y) {
+    private static void drawRectangle(List<Point> pointList, BufferedImage img) {
+        int firstX = pointList.get(0).getX();
+        int firstY = pointList.get(0).getY();
+
+        Graphics2D g2d = img.createGraphics();
+
+        g2d.setColor(Color.red);
+        g2d.drawRect(firstX - 2, firstY - 5, firstY / 2, 25);
+        g2d.dispose();
+
+    }
+
+    private static void buildImage(Color color, Color color2, BufferedImage img, int x, int y, Group group, List<Point> pointList) {
         if (color2.equals(color)) {
-            result.setRGB(x, y, color2.getRGB());
+            img.setRGB(x, y, color2.getRGB());
         } else {
+            pointList.add(new Point(x, y));
+            group.addPoint(new Point(x, y));
 
-            color2 = new Color(255, 0, 0);
-            result.setRGB(x, y, color2.getRGB());
-        }
-
-    }
-
-    private static void addGroup(Group group, int x, int y, Color color, Color color2) {
-        if (!color2.equals(color)) {
-            Point point = new Point(x, y);
-            group.addPoint(point);
+            img.setRGB(x, y, color2.getRGB());
         }
     }
 
@@ -77,9 +77,9 @@ public class Main {
     }
 
     @SneakyThrows
-    private static void writeImage(BufferedImage result) {
-        File output = new File("D:\\Projects\\java-education\\src\\main\\resources\\3.png");
-        ImageIO.write(result, "png", output);
+    private static void writeImage(BufferedImage img) {
+        File output = new File("D:\\Projects\\DifferenceImages\\src\\main\\resources\\res3.png");
+        ImageIO.write(img, "png", output);
 
         System.out.println("File successfully created. Path " + output.getAbsolutePath());
     }
